@@ -14,6 +14,8 @@ def create_app():
         from app import models 
 
     from app.routes.health import ns
+    from app.routes.users import us
     api = Api(app, prefix="/api", title="Backend Challenge", version="1.0", description="REST API")
     api.add_namespace(ns)
+    api.add_namespace(us)
     return app
