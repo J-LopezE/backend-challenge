@@ -1,6 +1,6 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
-from app.models import db, User
+from app.services.user_service import UserService
 
 us = Namespace("users", description="User management endpoints")
 user_model = us.model("User", {
@@ -8,57 +8,53 @@ user_model = us.model("User", {
     "username": fields.String(required=True, description="Username"),
 })
 @us.route("/")
-class UserList(Resource):
+class UserList(Resource):       
     def get(self):
-        users = User.query.all()
+        service = UserService()
+        users = service.get_all()
         return [{"id": u.id, "email": u.email, "username": u.username} for u in users]
+    
     @us.expect(user_model)
     def post(self):
-        body = request.json
-        email = body.get("email", None)
-        username = body.get("username", None)
+        service = UserService()
+        body = request.json          
+        email = body.get("email")
+        username = body.get("username")
         if not email or not username:
             return {"error": "email and username are required"}, 400
-        
-        new_user = User(email=email, username=username)
-        db.session.add(new_user)
-        db.session.commit()
-        return {"id": new_user.id, "email": new_user.email, "username": new_user.username},201
+        user = service.create(email, username)
+        return {"id": user.id, "email": user.email, "username": user.username},201
     
 @us.route("/<int:id>")
 class UserDetail(Resource):
     def get(self,id):
-        user =User.query.get(id)
+        service = UserService()
+        user =service.get_by_id(id)
         if not user:
            return {"error": "User not found"}, 404
         return {"id": user.id, "email": user.email, "username": user.username}
        
     @us.expect(user_model)
     def put(self,id):
-        user = User.query.get(id)
+        service = UserService()
+        user = service.get_by_id(id)
         if not user:
             return {"error": "User not found"}, 404
         body = request.json
         email = body.get("email")
         if email is not None and email == "":
             return {"error": "email cannot be empty"}, 400
-        if email:
-            user.email = email
         username = body.get("username")
         if username is not None and username == "":
             return {"error": "username cannot be empty"}, 400
-        if username:
-            user.username = username
-        user.email = body.get("email")
-        user.username = body.get("username")
-        db.session.commit()
+        user = service.update(id, email, username)
         return {"id": user.id, "email": user.email, "username": user.username}
        
         
     def delete(self,id):
-        user =User.query.get(id)
+        service = UserService()
+        user =service.get_by_id(id)
         if not user:
            return {"error": "User not found"}, 404
-        db.session.delete(user)
-        db.session.commit()
+        service.delete(id)
         return {"message": "User deleted"}, 200
