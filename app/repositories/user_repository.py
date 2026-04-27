@@ -1,5 +1,6 @@
 from app.models import User,db
-
+from app.exceptions.user_exceptions import DuplicateUserException
+from sqlalchemy.exc import IntegrityError
 class UserRepository:
     def get_all(self):
         users = User.query.all()
@@ -10,8 +11,12 @@ class UserRepository:
            return None
         return user
     def save(self,user):
-        db.session.add(user)
-        db.session.commit()
+        try:
+         db.session.add(user)
+         db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            raise DuplicateUserException("username or email")
         
     def delete(self,user):
         db.session.delete(user)
