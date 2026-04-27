@@ -1,20 +1,19 @@
 from flask_restx import Namespace, Resource, fields
 from flask import request
 from app.services.user_service import UserService
+from app.routes.dtos.user_dto import create_user_dtos
 
 us = Namespace("users", description="User management endpoints")
-user_model = us.model("User", {
-    "email":    fields.String(required=True, description="User email"),
-    "username": fields.String(required=True, description="Username"),
-})
+user_input_model, user_output_model = create_user_dtos(us)
 @us.route("/")
-class UserList(Resource):       
+class UserList(Resource):
+    @us.marshal_with(user_output_model)       
     def get(self):
         service = UserService()
         users = service.get_all()
         return [{"id": u.id, "email": u.email, "username": u.username} for u in users]
-    
-    @us.expect(user_model)
+    @us.expect(user_input_model)
+    @us.marshal_with(user_output_model)
     def post(self):
         service = UserService()
         body = request.json          
@@ -27,14 +26,15 @@ class UserList(Resource):
     
 @us.route("/<int:id>")
 class UserDetail(Resource):
+    @us.marshal_with(user_output_model)
     def get(self,id):
         service = UserService()
         user =service.get_by_id(id)
         if not user:
            return {"error": "User not found"}, 404
         return {"id": user.id, "email": user.email, "username": user.username}
-       
-    @us.expect(user_model)
+    @us.expect(user_input_model)   
+    @us.marshal_with(user_output_model)
     def put(self,id):
         service = UserService()
         user = service.get_by_id(id)
