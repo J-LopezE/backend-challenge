@@ -1,12 +1,14 @@
 from flask import Flask
 from flask_restx import Api
 from flask_migrate import Migrate
-from app.config import Config
+from app.config import config as config_dict
 from app.models import db
+import os
 
-def create_app():
+def create_app(config_name=None):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    config_name = config_name or os.getenv("FLASK_ENV", "development")
+    app.config.from_object(config_dict[config_name])
     db.init_app(app)
     Migrate(app, db)
 
