@@ -1,23 +1,27 @@
-from app.models import User,db
+from app.models import User, db
 from app.exceptions.user_exceptions import DuplicateUserException
 from sqlalchemy.exc import IntegrityError
+
+
 class UserRepository:
     def get_all(self):
         users = User.query.all()
         return users
-    def get_by_id(self,id):
-        user= User.query.get(id)
+
+    def get_by_id(self, id):
+        user = User.query.get(id)
         if not user:
-           return None
+            return None
         return user
-    def save(self,user):
+
+    def save(self, user):
         try:
-         db.session.add(user)
-         db.session.commit()
+            db.session.add(user)
+            db.session.commit()
         except IntegrityError:
             db.session.rollback()
             raise DuplicateUserException("username or email")
-        
-    def delete(self,user):
+
+    def delete(self, user):
         db.session.delete(user)
         db.session.commit()
