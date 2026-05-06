@@ -14,7 +14,6 @@ def create_app(config_name=None):
     Migrate(app, db)
 
     with app.app_context():
-
         from app.routes.health import ns
         from app.routes.users import us
 

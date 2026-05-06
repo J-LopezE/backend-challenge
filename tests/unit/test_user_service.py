@@ -29,3 +29,25 @@ def test_get_by_id_raises_not_found(mocker):
     service = UserService()
     with pytest.raises(UserNotFoundException):
         service.get_by_id(999)
+        
+def test_update_user_success(mocker):
+    mock_repo = mocker.patch("app.services.user_service.UserRepository")
+    # Define que get_by_id retorna un User existente:
+    mock_repo.return_value.get_by_id.return_value = User(
+        id=1, email="old@mail.com", username="olduser"
+    )
+    service = UserService()
+    result = service.update(1, "new@mail.com", "newuser")
+    assert result.email == "new@mail.com"
+    mock_repo.return_value.save.assert_called_once()
+
+
+def test_delete_user_success(mocker):
+    mock_repo = mocker.patch("app.services.user_service.UserRepository")
+    # Define que get_by_id retorna un User existente:
+    mock_repo.return_value.get_by_id.return_value = User(
+        id=1, email="test@mail.com", username="test"
+    )
+    service = UserService()
+    service.delete(1)
+    mock_repo.return_value.delete.assert_called_once()
