@@ -9,7 +9,7 @@ class UserRepository:
         return users
 
     def get_by_id(self, id):
-        user = User.query.get(id)
+        user = db.session.get(User,id)
         if not user:
             return None
         return user
